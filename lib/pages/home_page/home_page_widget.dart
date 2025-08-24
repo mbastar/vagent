@@ -239,6 +239,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 }(),
                                               );
                                               _model.isRecording = true;
+                                              _model.showTextInput = false;
                                               safeSetState(() {});
                                               if (shouldSetState) {
                                                 safeSetState(() {});
@@ -261,6 +262,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                 _model.isRecording = false;
                                                 // Transcription started
                                                 _model.isTranscribing = true;
+                                                _model.showTextInput = false;
                                                 safeSetState(() {});
                                                 // Run STT
                                                 _model.recordingError =
@@ -293,6 +295,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                               .error,
                                                     ),
                                                   );
+                                                  _model.showTextInput = true;
+                                                  _model.isTranscribing = false;
                                                   if (shouldSetState) {
                                                     safeSetState(() {});
                                                   }
@@ -362,6 +366,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                   safeSetState(() {});
                                                   // Transcription started
                                                   _model.isTranscribing = false;
+                                                  _model.showTextInput = false;
                                                   // Show waveform
                                                   _model.showWaveform = true;
                                                   safeSetState(() {});
@@ -424,6 +429,8 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                                                               .error,
                                                     ),
                                                   );
+                                                  _model.showTextInput = true;
+                                                  _model.isTranscribing = false;
                                                 }
 
                                                 if (shouldSetState) {
@@ -527,6 +534,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           await actions.interruptSpeech();
                           _model.isRecording = false;
                           _model.showWaveform = false;
+                          _model.showTextInput = true;
                           safeSetState(() {});
                           _model.timerController.onStopTimer();
                         },
@@ -562,6 +570,7 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                           _model.timerController.onResetTimer();
 
                           _model.showWaveform = false;
+                          _model.showTextInput = true;
                           safeSetState(() {});
                         },
                         textAlign: TextAlign.start,
@@ -577,6 +586,230 @@ class _HomePageWidgetState extends State<HomePageWidget> {
                 ),
               ),
             ),
+            if (_model.showTextInput && !_model.isRecording && !_model.isTranscribing && !_model.showWaveform)
+              Container(
+                width: MediaQuery.sizeOf(context).width * 1.0,
+                decoration: BoxDecoration(
+                  color: FlutterFlowTheme.of(context).primaryBackground,
+                ),
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(16.0, 8.0, 16.0, 24.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.max,
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _model.textInputController,
+                          focusNode: _model.textInputFocusNode,
+                          autofocus: false,
+                          obscureText: false,
+                          decoration: InputDecoration(
+                            isDense: true,
+                            labelStyle: FlutterFlowTheme.of(context)
+                                .labelMedium
+                                .override(
+                                  fontFamily: 'Figtree',
+                                  letterSpacing: 0.0,
+                                ),
+                            hintText: 'Type your message...',
+                            hintStyle: FlutterFlowTheme.of(context)
+                                .labelMedium
+                                .override(
+                                  fontFamily: 'Figtree',
+                                  letterSpacing: 0.0,
+                                ),
+                            enabledBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: FlutterFlowTheme.of(context).alternate,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(24.0),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: FlutterFlowTheme.of(context).primary,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(24.0),
+                            ),
+                            errorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: FlutterFlowTheme.of(context).error,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(24.0),
+                            ),
+                            focusedErrorBorder: OutlineInputBorder(
+                              borderSide: BorderSide(
+                                color: FlutterFlowTheme.of(context).error,
+                                width: 1.0,
+                              ),
+                              borderRadius: BorderRadius.circular(24.0),
+                            ),
+                            filled: true,
+                            fillColor: FlutterFlowTheme.of(context).secondaryBackground,
+                            contentPadding: const EdgeInsetsDirectional.fromSTEB(16.0, 12.0, 16.0, 12.0),
+                          ),
+                          style: FlutterFlowTheme.of(context).bodyMedium.override(
+                                fontFamily: 'Figtree',
+                                letterSpacing: 0.0,
+                              ),
+                          maxLines: 3,
+                          minLines: 1,
+                          cursorColor: FlutterFlowTheme.of(context).primary,
+                          validator: _model.textInputControllerValidator
+                              .asValidator(context),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsetsDirectional.fromSTEB(8.0, 0.0, 0.0, 0.0),
+                        child: FlutterFlowIconButton(
+                          borderRadius: 24.0,
+                          buttonSize: 48.0,
+                          fillColor: FlutterFlowTheme.of(context).primary,
+                          disabledColor: FlutterFlowTheme.of(context).alternate,
+                          icon: Icon(
+                            Icons.send_rounded,
+                            color: Colors.white,
+                            size: 24.0,
+                          ),
+                          onPressed: (_model.textInputController.text.trim().isEmpty)
+                              ? null
+                              : () async {
+                                  var shouldSetState = false;
+                                  
+                                  // Validate settings first
+                                  _model.settingsOK = await actions.validateSettings();
+                                  shouldSetState = true;
+                                  if (!_model.settingsOK!) {
+                                    await showModalBottomSheet(
+                                      isScrollControlled: true,
+                                      backgroundColor: Colors.transparent,
+                                      context: context,
+                                      builder: (context) {
+                                        return GestureDetector(
+                                          onTap: () => FocusScope.of(context).unfocus(),
+                                          child: Padding(
+                                            padding: MediaQuery.viewInsetsOf(context),
+                                            child: const SettingsWidget(),
+                                          ),
+                                        );
+                                      },
+                                    ).then((value) => safeSetState(() {}));
+                                    if (shouldSetState) {
+                                      safeSetState(() {});
+                                    }
+                                    return;
+                                  }
+
+                                  // Get the text input
+                                  final textMessage = _model.textInputController.text.trim();
+                                  
+                                  // Clear the input field
+                                  _model.textInputController.clear();
+                                  
+                                  // Add user message to chat history
+                                  FFAppState().addToMessageHistory(MessageStruct(
+                                    text: textMessage,
+                                    blueBubble: true,
+                                  ));
+                                  safeSetState(() {});
+                                  
+                                  // Hide text input during processing
+                                  _model.showTextInput = false;
+                                  _model.isTranscribing = true;
+                                  safeSetState(() {});
+                                  
+                                  // Wait for UI elements
+                                  await Future.delayed(const Duration(milliseconds: 100));
+                                  
+                                  // Scroll to bottom
+                                  await _model.listViewController?.animateTo(
+                                    _model.listViewController!.position.maxScrollExtent,
+                                    duration: const Duration(milliseconds: 100),
+                                    curve: Curves.ease,
+                                  );
+                                  
+                                  // Call webhook
+                                  _model.getResponseAPICall = await GetAgentResponseCall.call(
+                                    prompt: textMessage,
+                                    webhookURL: FFAppState().webhookURL,
+                                    webhookAuthValue: FFAppState().webhookAuthValue,
+                                    sessionID: FFAppState().sessionID,
+                                  );
+                                  shouldSetState = true;
+                                  
+                                  if ((_model.getResponseAPICall?.succeeded ?? true)) {
+                                    // Run TTS for webhook response
+                                    _model.speechDuration = await actions.fetchSpeechAndPlay(
+                                      GetAgentResponseCall.speech(
+                                        (_model.getResponseAPICall?.jsonBody ?? ''),
+                                      ).toString(),
+                                      FFAppState().apiKey,
+                                    );
+                                    shouldSetState = true;
+                                    
+                                    // Set timer value (playback length)
+                                    FFAppState().timerValue = _model.speechDuration!;
+                                    safeSetState(() {});
+                                    
+                                    // Transcription finished
+                                    _model.isTranscribing = false;
+                                    // Show waveform
+                                    _model.showWaveform = true;
+                                    safeSetState(() {});
+                                    
+                                    // Wait for UI elements (timer)
+                                    await Future.delayed(const Duration(milliseconds: 100));
+                                    
+                                    // Start timer
+                                    _model.timerController.onStartTimer();
+                                    
+                                    // Add grey bubble to conversation
+                                    FFAppState().addToMessageHistory(MessageStruct(
+                                      text: GetAgentResponseCall.text(
+                                        (_model.getResponseAPICall?.jsonBody ?? ''),
+                                      ).toString(),
+                                    ));
+                                    safeSetState(() {});
+                                    
+                                    // Wait for UI elements
+                                    await Future.delayed(const Duration(milliseconds: 100));
+                                    
+                                    // Scroll to bottom
+                                    await _model.listViewController?.animateTo(
+                                      _model.listViewController!.position.maxScrollExtent,
+                                      duration: const Duration(milliseconds: 100),
+                                      curve: Curves.ease,
+                                    );
+                                  } else {
+                                    // Display error message in UI
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          (_model.getResponseAPICall?.jsonBody ?? '').toString(),
+                                          style: TextStyle(
+                                            color: FlutterFlowTheme.of(context).primaryText,
+                                          ),
+                                        ),
+                                        duration: const Duration(milliseconds: 5000),
+                                        backgroundColor: FlutterFlowTheme.of(context).error,
+                                      ),
+                                    );
+                                    _model.showTextInput = true;
+                                    _model.isTranscribing = false;
+                                  }
+                                  
+                                  if (shouldSetState) {
+                                    safeSetState(() {});
+                                  }
+                                },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
       ),

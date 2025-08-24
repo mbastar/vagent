@@ -16,10 +16,16 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
 
   bool isTranscribing = false;
 
+  bool showTextInput = true;
+
   ///  State fields for stateful widgets in this page.
 
   // State field(s) for ListView widget.
   ScrollController? listViewController;
+  // State field(s) for textInput widget.
+  FocusNode? textInputFocusNode;
+  TextEditingController? textInputController;
+  String? Function(BuildContext, String?)? textInputControllerValidator;
   // Stores action output result for [Custom Action - validateSettings] action in StartRecording widget.
   bool? settingsOK;
   // Stores action output result for [Custom Action - stopTextRecording] action in StopRecording widget.
@@ -43,11 +49,15 @@ class HomePageModel extends FlutterFlowModel<HomePageWidget> {
   @override
   void initState(BuildContext context) {
     listViewController = ScrollController();
+    textInputFocusNode ??= FocusNode();
+    textInputController ??= TextEditingController();
   }
 
   @override
   void dispose() {
     listViewController?.dispose();
+    textInputFocusNode?.dispose();
+    textInputController?.dispose();
     timerController.dispose();
   }
 }
